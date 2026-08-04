@@ -1,8 +1,11 @@
 import { useState } from "react";
 import LoginDni from "./components/LoginDni";
 import RutinaDelDia from "./components/RutinaDelDia";
+import { AdminPanel } from "./components/AdminPanel";
 import { buscarUsuarioPorDni, buscarRutina, completarDia } from "./services/usuarios";
 import "./App.css";
+
+const CLAVE_PROFE = "1234"; // 🔑 Cambiá esta clave según lo acordado con el profe
 
 export default function App() {
   const [usuario, setUsuario] = useState(null);
@@ -10,6 +13,12 @@ export default function App() {
   const [cargando, setCargando] = useState(false);
   const [completando, setCompletando] = useState(false);
   const [error, setError] = useState("");
+
+  // Estados para el acceso del Profesor
+  const [esProfe, setEsProfe] = useState(false);
+  const [pidiendoClave, setPidiendoClave] = useState(false);
+  const [claveIngresada, setClaveIngresada] = useState("");
+  const [errorClave, setErrorClave] = useState(false);
 
   async function handleBuscar(dni) {
     setCargando(true);
@@ -23,9 +32,16 @@ export default function App() {
         return;
       }
 
-      const rutina = await buscarRutina(usuarioEncontrado.rutinaId);
       const claveDia = `dia${usuarioEncontrado.diaActual}`;
-      const ejerciciosDelDia = rutina?.dias?.[claveDia] ?? [];
+      let ejerciciosDelDia = [];
+
+      // Prioriza la rutina personalizada del usuario; si no existe, busca la plantilla por defecto
+      if (usuarioEncontrado.rutina && usuarioEncontrado.rutina[claveDia]) {
+        ejerciciosDelDia = usuarioEncontrado.rutina[claveDia];
+      } else if (usuarioEncontrado.rutinaId) {
+        const rutina = await buscarRutina(usuarioEncontrado.rutinaId);
+        ejerciciosDelDia = rutina?.dias?.[claveDia] ?? [];
+      }
 
       setUsuario(usuarioEncontrado);
       setEjercicios(ejerciciosDelDia);
@@ -61,15 +77,79 @@ export default function App() {
     setError("");
   }
 
-  return usuario ? (
-    <RutinaDelDia
-      usuario={usuario}
-      ejercicios={ejercicios}
-      onCompletar={handleCompletar}
-      completando={completando}
-      onVolver={handleVolver}
-    />
-  ) : (
-    <LoginDni onBuscar={handleBuscar} cargando={cargando} error={error} />
+  function handleLoginProfe(e) {
+    e.preventDefault();
+    if (claveIngresada === CLAVE_PROFE) {
+      setEsProfe(true);
+      setPidiendoClave(false);
+      setErrorClave(false);
+      setClaveIngresada("");
+    } else {
+      setErrorClave(true);
+    }
+  }
+
+  // 1. Si está autenticado como profe, muestra el AdminPanel
+  if (esProfe) {
+    return <AdminPanel onVolver={() => setEsProfe(false)} />;
+  }
+
+  // 2. Si un alumno buscó su DNI, muestra su Rutina
+  if (usuario) {
+    return (
+      <RutinaDelDia
+        usuario={usuario}
+        ejercicios={ejercicios}
+        onCompletar={handleCompletar}
+        completando={completando}
+        onVolver={handleVolver}
+      />
+    );
+  }
+
+  // 3. Pantalla de inicio para alumnos con el acceso para el profesor
+  return (
+    <div className="pantalla">
+      <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column" }}>
+        <LoginDni onBuscar={handleBuscar} cargando={cargando} error={error} />
+
+        <button className="btn-profe" onClick={() => setPidiendoClave(true)}>
+          ⚙️ Soy Profe
+        </button>
+      </div>
+
+      {pidiendoClave && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <h3>Acceso Profesor</h3>
+            <form onSubmit={handleLoginProfe}>
+              <input
+                type="password"
+                placeholder="Ingresá la contraseña"
+                value={claveIngresada}
+                onChange={(e) => setClaveIngresada(e.target.value)}
+                autoFocus
+              />
+              {errorClave && <p className="error-msg">Contraseña incorrecta</p>}
+
+              <div className="modal-acciones">
+                <button type="submit">Entrar</button>
+                <button
+                  type="button"
+                  className="btn-volver"
+                  onClick={() => {
+                    setPidiendoClave(false);
+                    setErrorClave(false);
+                    setClaveIngresada("");
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

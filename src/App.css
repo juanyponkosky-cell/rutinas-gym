@@ -202,3 +202,178 @@ button:disabled {
   color: var(--texto-muted);
   border: 1px solid var(--borde) !important;
 }
+/* --- Estilos para la vista de Profe / Admin --- */
+
+.btn-profe {
+  background: transparent;
+  color: var(--texto-muted);
+  border: 1px dashed var(--borde);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  align-self: center;
+  transition: all 0.2s ease;
+}
+
+.btn-profe:hover {
+  border-color: var(--amarillo);
+  color: var(--amarillo);
+}
+
+/* Modal de contraseña */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 320px;
+  background: var(--card);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.modal-card h3 {
+  color: var(--texto);
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.modal-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.modal-acciones button {
+  flex: 1;
+}
+
+/* --- Panel de Administración --- */
+
+.admin-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.admin-titulo {
+  color: var(--amarillo);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+select {
+  width: 100%;
+  background: #1e1e1e;
+  border: 1px solid var(--borde);
+  color: var(--texto);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 15px;
+  margin-bottom: 16px;
+  outline: none;
+}
+
+select:focus {
+  border-color: var(--amarillo);
+}
+
+.msg-exito {
+  color: #51cf66;
+  font-size: 13px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+/* --- Pestañas del panel admin --- */
+
+.admin-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.admin-tab {
+  flex: 1;
+  background: transparent;
+  color: var(--texto-muted);
+  font-size: 13px;
+  padding: 9px;
+}
+
+.admin-tab.activo {
+  background: var(--amarillo);
+  color: var(--negro);
+}
+
+/* --- Editor de rutina de un alumno --- */
+
+.editor-alumno-info {
+  border-bottom: 1px solid var(--borde);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.editor-dia {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.editor-dia-titulo {
+  color: var(--amarillo);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.editor-ejercicio-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.editor-ejercicio-row input {
+  margin-bottom: 0;
+  font-size: 13px;
+  padding: 9px 10px;
+}
+
+.btn-eliminar-ejercicio {
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid var(--borde) !important;
+  padding: 9px 12px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.btn-agregar-ejercicio {
+  background: transparent;
+  color: var(--amarillo);
+  border: 1px dashed var(--borde) !important;
+  font-size: 13px;
+  padding: 9px;
+  width: 100%;
+}
