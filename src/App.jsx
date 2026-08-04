@@ -10,6 +10,7 @@ const CLAVE_PROFE = "1234"; // 🔑 Cambiá esta clave según lo acordado con el
 export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [ejercicios, setEjercicios] = useState([]);
+  const [rutinaCompleta, setRutinaCompleta] = useState({});
   const [cargando, setCargando] = useState(false);
   const [completando, setCompletando] = useState(false);
   const [error, setError] = useState("");
@@ -32,19 +33,22 @@ export default function App() {
         return;
       }
 
-      const claveDia = `dia${usuarioEncontrado.diaActual}`;
-      let ejerciciosDelDia = [];
-
-      // Prioriza la rutina personalizada del usuario; si no existe, busca la plantilla por defecto
-      if (usuarioEncontrado.rutina && usuarioEncontrado.rutina[claveDia]) {
-        ejerciciosDelDia = usuarioEncontrado.rutina[claveDia];
-      } else if (usuarioEncontrado.rutinaId) {
-        const rutina = await buscarRutina(usuarioEncontrado.rutinaId);
-        ejerciciosDelDia = rutina?.dias?.[claveDia] ?? [];
+      // Trae la rutina completa (todos los días), priorizando la personalizada
+      // del alumno sobre la plantilla asignada.
+      let rutinaCompleta = usuarioEncontrado.rutina;
+      if (!rutinaCompleta || Object.keys(rutinaCompleta).length === 0) {
+        const plantilla = usuarioEncontrado.rutinaId
+          ? await buscarRutina(usuarioEncontrado.rutinaId)
+          : null;
+        rutinaCompleta = plantilla?.dias ?? {};
       }
+
+      const claveDia = `dia${usuarioEncontrado.diaActual}`;
+      const ejerciciosDelDia = rutinaCompleta[claveDia] ?? [];
 
       setUsuario(usuarioEncontrado);
       setEjercicios(ejerciciosDelDia);
+      setRutinaCompleta(rutinaCompleta);
     } catch (err) {
       console.error(err);
       setError("Ocurrió un error al buscar tu rutina. Probá de nuevo.");
@@ -74,6 +78,7 @@ export default function App() {
   function handleVolver() {
     setUsuario(null);
     setEjercicios([]);
+    setRutinaCompleta({});
     setError("");
   }
 
@@ -100,6 +105,7 @@ export default function App() {
       <RutinaDelDia
         usuario={usuario}
         ejercicios={ejercicios}
+        rutinaCompleta={rutinaCompleta}
         onCompletar={handleCompletar}
         completando={completando}
         onVolver={handleVolver}

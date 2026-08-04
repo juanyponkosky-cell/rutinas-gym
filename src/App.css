@@ -377,3 +377,28 @@ select:focus {
   padding: 9px;
   width: 100%;
 }
+/*boton ver rutina comleta*/
+.btn-ver-completa {
+  background: transparent;
+  color: var(--amarillo);
+  border: 1px solid var(--borde) !important;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.bloque-dia {
+  margin-bottom: 4px;
+}
+
+.bloque-dia-titulo {
+  color: var(--texto-muted);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.bloque-dia-titulo.hoy {
+  color: var(--amarillo);
+}
+
+/*fin parte de ver rutina completa*/
