@@ -402,3 +402,24 @@ select:focus {
 }
 
 /*fin parte de ver rutina completa*/
+
+/*bloque agregar peso a los ejercicios*/
+
+.ejercicio-peso {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--borde);
+}
+
+.ejercicio-peso label {
+  font-size: 11px;
+  color: var(--texto-muted);
+  margin-bottom: 4px;
+}
+
+.ejercicio-peso input {
+  margin-bottom: 0;
+  font-size: 13px;
+  padding: 8px 10px;
+}
+/*-------------------------------*/

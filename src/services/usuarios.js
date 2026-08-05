@@ -97,3 +97,16 @@ export async function actualizarRutinaAlumno(dni, rutina, cantidadDias) {
   await updateDoc(ref, { rutina, cantidadDias });
   return true;
 }
+/**
+ * Guarda el mapa completo de pesos de un alumno.
+ * Se guarda en usuarios/{dni}.pesos, separado de la rutina, para no pisar
+ * la plantilla compartida ni mezclar pesos entre alumnos.
+ * La clave de cada entrada es "{diaKey}::{nombreEjercicio}" (no la posición),
+ * así el peso queda atado al ejercicio en sí y no se desalinea si el profe
+ * reordena o agrega/quita ejercicios de ese día.
+ */
+export async function guardarPesosAlumno(dni, pesos) {
+  const ref = doc(db, "usuarios", dni);
+  await updateDoc(ref, { pesos });
+  return true;
+}

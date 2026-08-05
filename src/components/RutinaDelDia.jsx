@@ -1,4 +1,15 @@
 import { useState } from "react";
+import { guardarPesosAlumno } from "../services/usuarios";
+
+// Normaliza el nombre del ejercicio para usarlo como parte de la clave,
+// así "Press Banca" y "press banca " apuntan al mismo peso guardado.
+function normalizarNombre(nombre) {
+  return (nombre || "").trim().toLowerCase();
+}
+
+function claveDePeso(diaKey, nombreEjercicio) {
+  return `${diaKey}::${normalizarNombre(nombreEjercicio)}`;
+}
 
 export default function RutinaDelDia({
   usuario,
@@ -9,11 +20,43 @@ export default function RutinaDelDia({
   onVolver,
 }) {
   const [verCompleta, setVerCompleta] = useState(false);
+  const [pesos, setPesos] = useState(usuario.pesos || {});
 
   const diasArray = Array.from(
     { length: usuario.cantidadDias },
     (_, i) => `dia${i + 1}`
   );
+
+  function handleCambiarPeso(claveEjercicio, valor) {
+    setPesos((prev) => ({ ...prev, [claveEjercicio]: valor }));
+  }
+
+  function handleGuardarPeso(claveEjercicio, valor) {
+    const pesosActualizados = { ...pesos, [claveEjercicio]: valor };
+    guardarPesosAlumno(usuario.dni, pesosActualizados).catch((err) => {
+      console.error("No se pudo guardar el peso:", err);
+    });
+  }
+
+  function renderEjercicio(ej, diaKey, index) {
+    const claveEjercicio = claveDePeso(diaKey, ej.nombre);
+    return (
+      <div className="ejercicio" key={`${diaKey}_${index}`}>
+        <p className="ejercicio-nombre">{ej.nombre}</p>
+        <p className="ejercicio-detalle">{ej.detalle}</p>
+        <div className="ejercicio-peso">
+          <label>Peso usado</label>
+          <input
+            type="text"
+            placeholder="Ej: 20kg"
+            value={pesos[claveEjercicio] || ""}
+            onChange={(e) => handleCambiarPeso(claveEjercicio, e.target.value)}
+            onBlur={(e) => handleGuardarPeso(claveEjercicio, e.target.value)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pantalla">
@@ -38,12 +81,9 @@ export default function RutinaDelDia({
               </p>
             ) : (
               <div className="lista-ejercicios">
-                {ejercicios.map((ej, i) => (
-                  <div className="ejercicio" key={i}>
-                    <p className="ejercicio-nombre">{ej.nombre}</p>
-                    <p className="ejercicio-detalle">{ej.detalle}</p>
-                  </div>
-                ))}
+                {ejercicios.map((ej, i) =>
+                  renderEjercicio(ej, `dia${usuario.diaActual}`, i)
+                )}
               </div>
             )}
           </>
@@ -66,12 +106,9 @@ export default function RutinaDelDia({
                     </p>
                   ) : (
                     <div className="lista-ejercicios" style={{ marginBottom: "16px" }}>
-                      {ejerciciosDia.map((ej, idx) => (
-                        <div className="ejercicio" key={idx}>
-                          <p className="ejercicio-nombre">{ej.nombre}</p>
-                          <p className="ejercicio-detalle">{ej.detalle}</p>
-                        </div>
-                      ))}
+                      {ejerciciosDia.map((ej, idx) =>
+                        renderEjercicio(ej, diaKey, idx)
+                      )}
                     </div>
                   )}
                 </div>
