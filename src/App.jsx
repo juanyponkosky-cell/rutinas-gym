@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { auth } from "./firebase";
 import LoginDni from "./components/LoginDni";
 import RutinaDelDia from "./components/RutinaDelDia";
 import { AdminPanel } from "./components/AdminPanel";
 import { buscarUsuarioPorDni, buscarRutina, completarDia } from "./services/usuarios";
 import "./App.css";
-
-const CLAVE_PROFE = "1234"; // 🔑 Cambiá esta clave según lo acordado con el profe
 
 export default function App() {
   const [usuario, setUsuario] = useState(null);
@@ -15,11 +15,23 @@ export default function App() {
   const [completando, setCompletando] = useState(false);
   const [error, setError] = useState("");
 
-  // Estados para el acceso del Profesor
-  const [esProfe, setEsProfe] = useState(false);
-  const [pidiendoClave, setPidiendoClave] = useState(false);
-  const [claveIngresada, setClaveIngresada] = useState("");
-  const [errorClave, setErrorClave] = useState(false);
+  // Estados para el acceso del Profesor (ahora con Firebase Auth de verdad)
+  const [profeAuth, setProfeAuth] = useState(null); // usuario de Firebase Auth, o null
+  const [chequeandoSesion, setChequeandoSesion] = useState(true);
+  const [pidiendoLogin, setPidiendoLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorLogin, setErrorLogin] = useState("");
+  const [entrando, setEntrando] = useState(false);
+
+  // Escucha el estado de sesión del profe (se mantiene logueado entre recargas)
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setProfeAuth(user);
+      setChequeandoSesion(false);
+    });
+    return unsubscribe;
+  }, []);
 
   async function handleBuscar(dni) {
     setCargando(true);
@@ -33,8 +45,6 @@ export default function App() {
         return;
       }
 
-      // Trae la rutina completa (todos los días), priorizando la personalizada
-      // del alumno sobre la plantilla asignada.
       let rutinaCompleta = usuarioEncontrado.rutina;
       if (!rutinaCompleta || Object.keys(rutinaCompleta).length === 0) {
         const plantilla = usuarioEncontrado.rutinaId
@@ -82,24 +92,35 @@ export default function App() {
     setError("");
   }
 
-  function handleLoginProfe(e) {
+  async function handleLoginProfe(e) {
     e.preventDefault();
-    if (claveIngresada === CLAVE_PROFE) {
-      setEsProfe(true);
-      setPidiendoClave(false);
-      setErrorClave(false);
-      setClaveIngresada("");
-    } else {
-      setErrorClave(true);
+    setEntrando(true);
+    setErrorLogin("");
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      setPidiendoLogin(false);
+      setEmail("");
+      setPassword("");
+    } catch (err) {
+      console.error(err);
+      setErrorLogin("Email o contraseña incorrectos.");
+    } finally {
+      setEntrando(false);
     }
   }
 
-  // 1. Si está autenticado como profe, muestra el AdminPanel
-  if (esProfe) {
-    return <AdminPanel onVolver={() => setEsProfe(false)} />;
+  async function handleCerrarSesion() {
+    await signOut(auth);
   }
 
-  // 2. Si un alumno buscó su DNI, muestra su Rutina
+  if (chequeandoSesion) {
+    return <div className="pantalla" />;
+  }
+
+  if (profeAuth) {
+    return <AdminPanel onCerrarSesion={handleCerrarSesion} />;
+  }
+
   if (usuario) {
     return (
       <RutinaDelDia
@@ -113,40 +134,52 @@ export default function App() {
     );
   }
 
-  // 3. Pantalla de inicio para alumnos con el acceso para el profesor
   return (
     <div className="pantalla">
       <div style={{ width: "100%", maxWidth: "360px", display: "flex", flexDirection: "column" }}>
         <LoginDni onBuscar={handleBuscar} cargando={cargando} error={error} />
 
-        <button className="btn-profe" onClick={() => setPidiendoClave(true)}>
+        <button className="btn-profe" onClick={() => setPidiendoLogin(true)}>
           ⚙️ Soy Profe
         </button>
       </div>
 
-      {pidiendoClave && (
+      {pidiendoLogin && (
         <div className="modal-overlay">
           <div className="modal-card">
             <h3>Acceso Profesor</h3>
             <form onSubmit={handleLoginProfe}>
+              <label>Email</label>
               <input
-                type="password"
-                placeholder="Ingresá la contraseña"
-                value={claveIngresada}
-                onChange={(e) => setClaveIngresada(e.target.value)}
+                type="email"
+                placeholder="profe@ejemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 autoFocus
               />
-              {errorClave && <p className="error-msg">Contraseña incorrecta</p>}
+
+              <label>Contraseña</label>
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
+              {errorLogin && <p className="error-msg">{errorLogin}</p>}
 
               <div className="modal-acciones">
-                <button type="submit">Entrar</button>
+                <button type="submit" disabled={entrando}>
+                  {entrando ? "Entrando..." : "Entrar"}
+                </button>
                 <button
                   type="button"
                   className="btn-volver"
                   onClick={() => {
-                    setPidiendoClave(false);
-                    setErrorClave(false);
-                    setClaveIngresada("");
+                    setPidiendoLogin(false);
+                    setErrorLogin("");
+                    setEmail("");
+                    setPassword("");
                   }}
                 >
                   Cancelar

@@ -69,7 +69,7 @@ function RegistrarAlumno() {
   );
 }
 
-export function AdminPanel({ onVolver }) {
+export function AdminPanel({ onCerrarSesion }) {
   const [tab, setTab] = useState("registrar"); // "registrar" | "editar"
 
   return (
@@ -98,8 +98,13 @@ export function AdminPanel({ onVolver }) {
 
         {tab === "registrar" ? <RegistrarAlumno /> : <EditarAlumno />}
 
-        <button type="button" className="btn-volver" onClick={onVolver} style={{ marginTop: "12px" }}>
-          ← Volver al inicio
+        <button
+          type="button"
+          className="btn-volver"
+          onClick={onCerrarSesion}
+          style={{ marginTop: "12px" }}
+        >
+          Cerrar sesión
         </button>
       </div>
     </div>
