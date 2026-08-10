@@ -16,7 +16,7 @@ export default function LoginDni({ onBuscar, cargando, error }) {
         <div className="header-login">
           <div className="logo-fts">FTS</div>
           <p className="marca">FUNTRAINSPORTS</p>
-          <p className="subtitulo">Ingresá tu rutina del día</p>
+          <p className="subtitulo">Ingresá a tu rutina del día</p>
         </div>
 
         <label htmlFor="dni">DNI</label>
