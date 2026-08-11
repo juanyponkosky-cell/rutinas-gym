@@ -486,3 +486,12 @@ select:focus {
   font-weight: 700;
 }
 /* --------------------- */
+
+/*boton eliminar alumno*/
+.btn-eliminar-alumno {
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid #5c2626 !important;
+  font-size: 13px;
+  margin-top: 8px;
+}

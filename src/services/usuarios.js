@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
 /**
@@ -126,4 +126,13 @@ export async function listarAlumnos() {
   );
 
   return alumnos;
+}
+/**
+ * Elimina un alumno de forma definitiva. Requiere estar logueado como
+ * profe (lo exige la regla de Firestore); no hay forma de deshacer esto.
+ */
+export async function eliminarAlumno(dni) {
+  const ref = doc(db, "usuarios", dni);
+  await deleteDoc(ref);
+  return true;
 }

@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { buscarUsuarioPorDni, buscarRutina, actualizarRutinaAlumno } from "../services/usuarios";
+import {
+  buscarUsuarioPorDni,
+  buscarRutina,
+  actualizarRutinaAlumno,
+  eliminarAlumno,
+} from "../services/usuarios";
 
 export function EditarAlumno({ dniPreset }) {
   const [dniBusqueda, setDniBusqueda] = useState(dniPreset || "");
@@ -12,6 +17,8 @@ export function EditarAlumno({ dniPreset }) {
 
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [eliminando, setEliminando] = useState(false);
+  const [mensajeEliminado, setMensajeEliminado] = useState("");
 
   async function buscarPorDni(dni) {
     const dniLimpio = String(dni || "").trim();
@@ -20,6 +27,7 @@ export function EditarAlumno({ dniPreset }) {
     setBuscando(true);
     setErrorBusqueda("");
     setMensaje("");
+    setMensajeEliminado("");
     setAlumno(null);
 
     try {
@@ -48,7 +56,6 @@ export function EditarAlumno({ dniPreset }) {
     }
   }
 
-  // Si llegamos con un DNI ya elegido (desde la lista de alumnos), buscamos automático
   useEffect(() => {
     if (dniPreset) {
       setDniBusqueda(dniPreset);
@@ -117,10 +124,35 @@ export function EditarAlumno({ dniPreset }) {
     }
   }
 
+  async function handleEliminar() {
+    if (!alumno) return;
+
+    const confirmado = window.confirm(
+      `¿Seguro que querés eliminar a ${alumno.nombre} (DNI ${alumno.dni})?\n\nEsta acción no se puede deshacer: se borra su rutina, día actual y pesos guardados.`
+    );
+    if (!confirmado) return;
+
+    setEliminando(true);
+    try {
+      await eliminarAlumno(alumno.dni);
+      setMensajeEliminado(`Alumno "${alumno.nombre}" eliminado.`);
+      setAlumno(null);
+      setRutina({});
+      setDniBusqueda("");
+    } catch (err) {
+      console.error(err);
+      setMensaje("Error al eliminar el alumno.");
+    } finally {
+      setEliminando(false);
+    }
+  }
+
   const diasArray = Array.from({ length: cantidadDias }, (_, i) => `dia${i + 1}`);
 
   return (
     <div>
+      {mensajeEliminado && <p className="msg-exito">{mensajeEliminado}</p>}
+
       <form onSubmit={handleBuscar} style={{ marginBottom: alumno ? "20px" : "0" }}>
         <label>Buscar alumno por DNI</label>
         <div style={{ display: "flex", gap: "8px" }}>
@@ -199,6 +231,15 @@ export function EditarAlumno({ dniPreset }) {
 
           <button type="button" onClick={handleGuardar} disabled={guardando}>
             {guardando ? "Guardando..." : "Guardar cambios"}
+          </button>
+
+          <button
+            type="button"
+            className="btn-eliminar-alumno"
+            onClick={handleEliminar}
+            disabled={eliminando}
+          >
+            {eliminando ? "Eliminando..." : "🗑 Eliminar alumno"}
           </button>
         </div>
       )}
