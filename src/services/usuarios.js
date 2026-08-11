@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
 /**
@@ -109,4 +109,21 @@ export async function guardarPesosAlumno(dni, pesos) {
   const ref = doc(db, "usuarios", dni);
   await updateDoc(ref, { pesos });
   return true;
+}
+
+/**
+ * Trae todos los alumnos, ordenados alfabéticamente por nombre
+ * (el orden se hace en el cliente, no en la consulta a Firestore, para
+ * que maneje bien acentos/mayúsculas y no dependa de un índice compuesto).
+ */
+export async function listarAlumnos() {
+  const ref = collection(db, "usuarios");
+  const snap = await getDocs(ref);
+  const alumnos = snap.docs.map((d) => ({ dni: d.id, ...d.data() }));
+
+  alumnos.sort((a, b) =>
+    (a.nombre || "").localeCompare(b.nombre || "", "es", { sensitivity: "base" })
+  );
+
+  return alumnos;
 }

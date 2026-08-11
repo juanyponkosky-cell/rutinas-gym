@@ -1,21 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { buscarUsuarioPorDni, buscarRutina, actualizarRutinaAlumno } from "../services/usuarios";
 
-export function EditarAlumno() {
-  const [dniBusqueda, setDniBusqueda] = useState("");
+export function EditarAlumno({ dniPreset }) {
+  const [dniBusqueda, setDniBusqueda] = useState(dniPreset || "");
   const [buscando, setBuscando] = useState(false);
   const [errorBusqueda, setErrorBusqueda] = useState("");
 
-  const [alumno, setAlumno] = useState(null); // { dni, nombre, ... }
+  const [alumno, setAlumno] = useState(null);
   const [cantidadDias, setCantidadDias] = useState(3);
-  const [rutina, setRutina] = useState({}); // { dia1: [{nombre, detalle}], ... }
+  const [rutina, setRutina] = useState({});
 
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
-  async function handleBuscar(e) {
-    e.preventDefault();
-    const dniLimpio = dniBusqueda.trim();
+  async function buscarPorDni(dni) {
+    const dniLimpio = String(dni || "").trim();
     if (!dniLimpio) return;
 
     setBuscando(true);
@@ -32,8 +31,6 @@ export function EditarAlumno() {
         return;
       }
 
-      // Si el alumno ya tiene rutina propia guardada, partimos de esa.
-      // Si no, usamos la plantilla asignada como punto de partida.
       let rutinaBase = encontrado.rutina;
       if (!rutinaBase || Object.keys(rutinaBase).length === 0) {
         const plantilla = encontrado.rutinaId ? await buscarRutina(encontrado.rutinaId) : null;
@@ -51,8 +48,21 @@ export function EditarAlumno() {
     }
   }
 
+  // Si llegamos con un DNI ya elegido (desde la lista de alumnos), buscamos automático
+  useEffect(() => {
+    if (dniPreset) {
+      setDniBusqueda(dniPreset);
+      buscarPorDni(dniPreset);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dniPreset]);
+
+  function handleBuscar(e) {
+    e.preventDefault();
+    buscarPorDni(dniBusqueda);
+  }
+
   function clonarRutina(rutinaOriginal) {
-    // copia profunda simple para no mutar el objeto original
     return JSON.parse(JSON.stringify(rutinaOriginal || {}));
   }
 
@@ -91,7 +101,6 @@ export function EditarAlumno() {
     setGuardando(true);
     setMensaje("");
     try {
-      // Solo guardamos los días dentro del rango actual de cantidadDias
       const rutinaFinal = {};
       for (let i = 1; i <= cantidadDias; i++) {
         rutinaFinal[`dia${i}`] = rutina[`dia${i}`] || [];

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { crearAlumnoConPlantilla } from "../services/usuarios";
 import { EditarAlumno } from "./EditarAlumno";
+import { ListaAlumnos } from "./ListaAlumnos";
 
 function RegistrarAlumno() {
   const [dni, setDni] = useState("");
@@ -70,7 +71,20 @@ function RegistrarAlumno() {
 }
 
 export function AdminPanel({ onCerrarSesion }) {
-  const [tab, setTab] = useState("registrar"); // "registrar" | "editar"
+  const [tab, setTab] = useState("registrar"); // "registrar" | "editar" | "alumnos"
+  const [dniSeleccionado, setDniSeleccionado] = useState(null);
+
+  function handleSeleccionarAlumno(dni) {
+    setDniSeleccionado(dni);
+    setTab("editar");
+  }
+
+  function handleCambiarTab(nuevoTab) {
+    if (nuevoTab === "editar" && tab !== "editar") {
+      setDniSeleccionado(null);
+    }
+    setTab(nuevoTab);
+  }
 
   return (
     <div className="pantalla">
@@ -83,20 +97,31 @@ export function AdminPanel({ onCerrarSesion }) {
           <button
             type="button"
             className={tab === "registrar" ? "admin-tab activo" : "admin-tab"}
-            onClick={() => setTab("registrar")}
+            onClick={() => handleCambiarTab("registrar")}
           >
-            Registrar alumno
+            Registrar
+          </button>
+          <button
+            type="button"
+            className={tab === "alumnos" ? "admin-tab activo" : "admin-tab"}
+            onClick={() => handleCambiarTab("alumnos")}
+          >
+            Alumnos
           </button>
           <button
             type="button"
             className={tab === "editar" ? "admin-tab activo" : "admin-tab"}
-            onClick={() => setTab("editar")}
+            onClick={() => handleCambiarTab("editar")}
           >
             Editar rutina
           </button>
         </div>
 
-        {tab === "registrar" ? <RegistrarAlumno /> : <EditarAlumno />}
+        {tab === "registrar" && <RegistrarAlumno />}
+        {tab === "alumnos" && <ListaAlumnos onSeleccionarAlumno={handleSeleccionarAlumno} />}
+        {tab === "editar" && (
+          <EditarAlumno key={dniSeleccionado || "manual"} dniPreset={dniSeleccionado} />
+        )}
 
         <button
           type="button"

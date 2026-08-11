@@ -427,3 +427,62 @@ select:focus {
   padding: 8px 10px;
 }
 /*-------------------------------*/
+
+/* --- Lista de alumnos --- */
+
+.lista-alumnos-header {
+  margin-bottom: 12px;
+}
+
+.lista-alumnos-total {
+  color: var(--amarillo);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.lista-alumnos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.item-alumno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1e1e1e;
+  border: 1px solid var(--borde) !important;
+  border-radius: 10px;
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.item-alumno:hover {
+  border-color: var(--amarillo) !important;
+}
+
+.item-alumno-nombre {
+  color: var(--texto);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+
+.item-alumno-dni {
+  color: var(--texto-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.item-alumno-flecha {
+  color: var(--amarillo);
+  font-size: 20px;
+  font-weight: 700;
+}
+/* --------------------- */
