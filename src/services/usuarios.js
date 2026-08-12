@@ -51,14 +51,14 @@ export async function crearAlumnoConPlantilla({ dni, nombre, rutinaId }) {
   const plantillaRef = doc(db, "rutinas", rutinaId);
   const plantillaSnap = await getDoc(plantillaRef);
 
-  let ejerciciosPlantilla = {};
-  if (plantillaSnap.exists()) {
-    ejerciciosPlantilla = plantillaSnap.data();
+  if (!plantillaSnap.exists()) {
+    throw new Error(
+      `La plantilla "${rutinaId}" todavía no está cargada en Firestore. Subila antes de asignarla a un alumno.`
+    );
   }
 
+  const ejerciciosPlantilla = plantillaSnap.data();
   const diasPlantilla = ejerciciosPlantilla.dias || {};
-  // La cantidad de días se calcula a partir de las claves reales de la plantilla
-  // (dia1, dia2, ...), no de un campo separado que podría no existir o desactualizarse.
   const cantidadDias = Object.keys(diasPlantilla).length || 3;
 
   const userRef = doc(db, "usuarios", dniLimpio);
@@ -119,4 +119,32 @@ export async function eliminarAlumno(dni) {
   const ref = doc(db, "usuarios", dni);
   await deleteDoc(ref);
   return true;
+}
+
+/**
+ * Reemplaza por completo la rutina de un alumno existente por una plantilla
+ * ya cargada en la colección "rutinas". Pisa cualquier edición personalizada
+ * que tuviera antes y reinicia su día actual a 1 (porque la nueva plantilla
+ * puede tener una cantidad de días distinta a la que tenía).
+ */
+export async function asignarPlantillaAlumno(dni, rutinaId) {
+  const plantillaRef = doc(db, "rutinas", rutinaId);
+  const plantillaSnap = await getDoc(plantillaRef);
+
+  if (!plantillaSnap.exists()) {
+    throw new Error("La plantilla seleccionada no existe.");
+  }
+
+  const diasPlantilla = plantillaSnap.data().dias || {};
+  const cantidadDias = Object.keys(diasPlantilla).length || 1;
+
+  const ref = doc(db, "usuarios", dni);
+  await updateDoc(ref, {
+    rutinaId,
+    rutina: diasPlantilla,
+    cantidadDias,
+    diaActual: 1,
+  });
+
+  return { cantidadDias };
 }

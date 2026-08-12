@@ -4,7 +4,9 @@ import {
   buscarRutina,
   actualizarRutinaAlumno,
   eliminarAlumno,
+  asignarPlantillaAlumno,
 } from "../services/usuarios";
+import { PLANTILLAS_RUTINA } from "../constants/plantillasRutina";
 
 export function EditarAlumno({ dniPreset }) {
   const [dniBusqueda, setDniBusqueda] = useState(dniPreset || "");
@@ -19,6 +21,8 @@ export function EditarAlumno({ dniPreset }) {
   const [mensaje, setMensaje] = useState("");
   const [eliminando, setEliminando] = useState(false);
   const [mensajeEliminado, setMensajeEliminado] = useState("");
+  const [plantillaElegida, setPlantillaElegida] = useState("");
+  const [aplicandoPlantilla, setAplicandoPlantilla] = useState(false);
 
   async function buscarPorDni(dni) {
     const dniLimpio = String(dni || "").trim();
@@ -48,6 +52,7 @@ export function EditarAlumno({ dniPreset }) {
       setAlumno(encontrado);
       setCantidadDias(encontrado.cantidadDias || 3);
       setRutina(clonarRutina(rutinaBase));
+      setPlantillaElegida(encontrado.rutinaId || "");
     } catch (err) {
       console.error(err);
       setErrorBusqueda("Ocurrió un error al buscar el alumno. Probá de nuevo.");
@@ -124,6 +129,28 @@ export function EditarAlumno({ dniPreset }) {
     }
   }
 
+  async function handleAplicarPlantilla() {
+    if (!alumno || !plantillaElegida) return;
+
+    const confirmado = window.confirm(
+      `¿Reemplazar la rutina de ${alumno.nombre} por la plantilla elegida?\n\nEsto borra cualquier ejercicio o ajuste personalizado que tuviera antes, y su día actual vuelve a empezar en el Día 1.`
+    );
+    if (!confirmado) return;
+
+    setAplicandoPlantilla(true);
+    setMensaje("");
+    try {
+      await asignarPlantillaAlumno(alumno.dni, plantillaElegida);
+      await buscarPorDni(alumno.dni);
+      setMensaje("¡Plantilla aplicada con éxito!");
+    } catch (err) {
+      console.error(err);
+      setMensaje("Error al aplicar la plantilla.");
+    } finally {
+      setAplicandoPlantilla(false);
+    }
+  }
+
   async function handleEliminar() {
     if (!alumno) return;
 
@@ -175,6 +202,30 @@ export function EditarAlumno({ dniPreset }) {
           <div className="editor-alumno-info">
             <p className="nombre" style={{ fontSize: "16px" }}>{alumno.nombre}</p>
             <p className="subtitulo" style={{ margin: 0 }}>DNI: {alumno.dni}</p>
+          </div>
+
+          <div className="editor-cambiar-plantilla">
+            <label>Cambiar a otra plantilla existente</label>
+            <select value={plantillaElegida} onChange={(e) => setPlantillaElegida(e.target.value)}>
+              <option value="">Elegir plantilla...</option>
+              {PLANTILLAS_RUTINA.map((grupo) => (
+                <optgroup label={grupo.grupo} key={grupo.grupo}>
+                  {grupo.opciones.map((op) => (
+                    <option value={op.id} key={op.id}>
+                      {op.etiqueta}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="btn-aplicar-plantilla"
+              onClick={handleAplicarPlantilla}
+              disabled={!plantillaElegida || aplicandoPlantilla}
+            >
+              {aplicandoPlantilla ? "Aplicando..." : "Reemplazar rutina con esta plantilla"}
+            </button>
           </div>
 
           <label>Cantidad de días</label>

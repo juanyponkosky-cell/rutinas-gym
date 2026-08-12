@@ -202,9 +202,10 @@ button:disabled {
 }
 
 .btn-volver {
-  background: transparent;
-  color: var(--texto-muted);
+  background: transparent !important;
+  color: var(--texto-muted) !important;
   border: 1px solid var(--borde) !important;
+  margin-bottom: 10px;
 }
 /* --- Estilos para la vista de Profe / Admin --- */
 
@@ -383,8 +384,15 @@ select:focus {
 }
 /*boton ver rutina comleta*/
 .btn-ver-completa {
-  background: transparent;
-  color: var(--amarillo);
+  background: transparent !important;
+  color: var(--amarillo) !important;
+  border: 1px solid var(--borde) !important;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.btn-descargar-pdf {
+  background: #1e1e1e !important;
+  color: var(--texto) !important;
   border: 1px solid var(--borde) !important;
   font-size: 13px;
   margin-bottom: 10px;
@@ -494,4 +502,49 @@ select:focus {
   border: 1px solid #5c2626 !important;
   font-size: 13px;
   margin-top: 8px;
+}
+
+/*editor cambiar plantilla*/
+.editor-cambiar-plantilla {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 18px;
+}
+
+.editor-cambiar-plantilla label {
+  margin-bottom: 8px;
+}
+
+.editor-cambiar-plantilla select {
+  margin-bottom: 10px;
+}
+
+.btn-aplicar-plantilla {
+  background: transparent;
+  color: var(--amarillo);
+  border: 1px solid var(--amarillo) !important;
+  font-size: 13px;
+}
+/*menu dias*/
+.menu-dias {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.btn-dia-menu {
+  background: var(--amarillo);
+  color: var(--negro);
+  font-weight: 700;
+  padding: 18px 10px;
+  border: none;
+}
+
+.ejercicio-peso-guardado {
+  color: var(--amarillo);
+  font-size: 12px;
+  font-weight: 600;
+  margin: 6px 0 0;
 }

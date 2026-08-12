@@ -2,21 +2,22 @@ import { useState, useEffect } from "react";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "./firebase";
 import LoginDni from "./components/LoginDni";
+import MenuDias from "./components/MenuDias";
 import RutinaDelDia from "./components/RutinaDelDia";
 import { AdminPanel } from "./components/AdminPanel";
-import { buscarUsuarioPorDni, buscarRutina, completarDia } from "./services/usuarios";
+import { buscarUsuarioPorDni, buscarRutina, guardarPesosAlumno } from "./services/usuarios";
+import { descargarRutinaPdf } from "./utils/generarPdf";
 import "./App.css";
 
 export default function App() {
   const [usuario, setUsuario] = useState(null);
-  const [ejercicios, setEjercicios] = useState([]);
   const [rutinaCompleta, setRutinaCompleta] = useState({});
+  const [pesos, setPesos] = useState({});
+  const [diaSeleccionado, setDiaSeleccionado] = useState(null); // null = menú de días
   const [cargando, setCargando] = useState(false);
-  const [completando, setCompletando] = useState(false);
   const [error, setError] = useState("");
 
-  // Estados para el acceso del Profesor (ahora con Firebase Auth de verdad)
-  const [profeAuth, setProfeAuth] = useState(null); // usuario de Firebase Auth, o null
+  const [profeAuth, setProfeAuth] = useState(null);
   const [chequeandoSesion, setChequeandoSesion] = useState(true);
   const [pidiendoLogin, setPidiendoLogin] = useState(false);
   const [email, setEmail] = useState("");
@@ -24,7 +25,6 @@ export default function App() {
   const [errorLogin, setErrorLogin] = useState("");
   const [entrando, setEntrando] = useState(false);
 
-  // Escucha el estado de sesión del profe (se mantiene logueado entre recargas)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setProfeAuth(user);
@@ -45,20 +45,18 @@ export default function App() {
         return;
       }
 
-      let rutinaCompleta = usuarioEncontrado.rutina;
-      if (!rutinaCompleta || Object.keys(rutinaCompleta).length === 0) {
+      let rc = usuarioEncontrado.rutina;
+      if (!rc || Object.keys(rc).length === 0) {
         const plantilla = usuarioEncontrado.rutinaId
           ? await buscarRutina(usuarioEncontrado.rutinaId)
           : null;
-        rutinaCompleta = plantilla?.dias ?? {};
+        rc = plantilla?.dias ?? {};
       }
 
-      const claveDia = `dia${usuarioEncontrado.diaActual}`;
-      const ejerciciosDelDia = rutinaCompleta[claveDia] ?? [];
-
       setUsuario(usuarioEncontrado);
-      setEjercicios(ejerciciosDelDia);
-      setRutinaCompleta(rutinaCompleta);
+      setRutinaCompleta(rc);
+      setPesos(usuarioEncontrado.pesos || {});
+      setDiaSeleccionado(null);
     } catch (err) {
       console.error(err);
       setError("Ocurrió un error al buscar tu rutina. Probá de nuevo.");
@@ -67,29 +65,36 @@ export default function App() {
     }
   }
 
-  async function handleCompletar() {
-    setCompletando(true);
-    try {
-      const proximoDia = await completarDia(
-        usuario.dni,
-        usuario.diaActual,
-        usuario.cantidadDias
-      );
-      console.log("Día actualizado a:", proximoDia);
-      handleVolver();
-    } catch (err) {
-      console.error(err);
-      setError("No se pudo guardar. Probá de nuevo.");
-    } finally {
-      setCompletando(false);
-    }
+  function handleVolverInicio() {
+    setUsuario(null);
+    setRutinaCompleta({});
+    setPesos({});
+    setDiaSeleccionado(null);
+    setError("");
   }
 
-  function handleVolver() {
-    setUsuario(null);
-    setEjercicios([]);
-    setRutinaCompleta({});
-    setError("");
+  function handleSeleccionarDia(numeroDia) {
+    setDiaSeleccionado(numeroDia);
+  }
+
+  function handleVolverAlMenu() {
+    setDiaSeleccionado(null);
+  }
+
+  function handleCambiarPeso(claveEjercicio, valor) {
+    setPesos((prev) => ({ ...prev, [claveEjercicio]: valor }));
+  }
+
+  function handleGuardarPeso(claveEjercicio, valor) {
+    const pesosActualizados = { ...pesos, [claveEjercicio]: valor };
+    setPesos(pesosActualizados);
+    guardarPesosAlumno(usuario.dni, pesosActualizados).catch((err) => {
+      console.error("No se pudo guardar el peso:", err);
+    });
+  }
+
+  function handleDescargarPdf() {
+    descargarRutinaPdf(usuario, rutinaCompleta, pesos);
   }
 
   async function handleLoginProfe(e) {
@@ -121,15 +126,29 @@ export default function App() {
     return <AdminPanel onCerrarSesion={handleCerrarSesion} />;
   }
 
-  if (usuario) {
+  if (usuario && diaSeleccionado) {
     return (
       <RutinaDelDia
         usuario={usuario}
-        ejercicios={ejercicios}
+        numeroDia={diaSeleccionado}
+        ejercicios={rutinaCompleta[`dia${diaSeleccionado}`] || []}
+        pesos={pesos}
+        onCambiarPeso={handleCambiarPeso}
+        onGuardarPeso={handleGuardarPeso}
+        onVolverMenu={handleVolverAlMenu}
+      />
+    );
+  }
+
+  if (usuario) {
+    return (
+      <MenuDias
+        usuario={usuario}
         rutinaCompleta={rutinaCompleta}
-        onCompletar={handleCompletar}
-        completando={completando}
-        onVolver={handleVolver}
+        pesos={pesos}
+        onSeleccionarDia={handleSeleccionarDia}
+        onDescargarPdf={handleDescargarPdf}
+        onVolver={handleVolverInicio}
       />
     );
   }
