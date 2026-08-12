@@ -6,7 +6,7 @@ import { ListaAlumnos } from "./ListaAlumnos";
 function RegistrarAlumno() {
   const [dni, setDni] = useState("");
   const [nombre, setNombre] = useState("");
-  const [rutinaId, setRutinaId] = useState("hipertrofia_3dias_A");
+  const [rutinaId, setRutinaId] = useState("3dias_hombre_nivel1");
   const [mensaje, setMensaje] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -52,13 +52,37 @@ function RegistrarAlumno() {
         onChange={(e) => setNombre(e.target.value)}
         placeholder="Ej: Juan Pérez"
       />
+<label>Plantilla de Rutina</label>
+<select value={rutinaId} onChange={(e) => setRutinaId(e.target.value)}>
+  <optgroup label="3 días">
+    <option value="3dias_hombre_nivel1">3 días · Hombre · Nivel 1</option>
+    <option value="3dias_hombre_nivel2">3 días · Hombre · Nivel 2</option>
+    <option value="3dias_hombre_nivel3">3 días · Hombre · Nivel 3</option>
+    <option value="3dias_mujer_nivel1">3 días · Mujer · Nivel 1</option>
+    <option value="3dias_mujer_nivel2">3 días · Mujer · Nivel 2</option>
+    <option value="3dias_mujer_nivel3">3 días · Mujer · Nivel 3</option>
+    <option value="3dias_mujer_nivel4">3 días · Mujer · Nivel 4</option>
+  </optgroup>
 
-      <label>Plantilla de Rutina</label>
-      <select value={rutinaId} onChange={(e) => setRutinaId(e.target.value)}>
-        <option value="hipertrofia_3dias_A">Hipertrofia 3 Días (Opción A)</option>
-        <option value="fuerza_4dias">Fuerza 4 Días</option>
-        <option value="acondicionamiento_2dias">Acondicionamiento 2 Días</option>
-      </select>
+  <optgroup label="4 días">
+    <option value="4dias_hombre_nivel1">4 días · Hombre · Nivel 1</option>
+    <option value="4dias_hombre_nivel2">4 días · Hombre · Nivel 2</option>
+    <option value="4dias_hombre_nivel3">4 días · Hombre · Nivel 3</option>
+    <option value="4dias_mujer_nivel1">4 días · Mujer · Nivel 1</option>
+    <option value="4dias_mujer_nivel2">4 días · Mujer · Nivel 2</option>
+    <option value="4dias_mujer_nivel3">4 días · Mujer · Nivel 3</option>
+  </optgroup>
+
+  <optgroup label="5 días">
+    <option value="5dias_hombre_nivel1">5 días · Hombre · Nivel 1</option>
+    <option value="5dias_hombre_nivel2">5 días · Hombre · Nivel 2</option>
+    <option value="5dias_mujer_nivel1">5 días · Mujer · Nivel 1</option>
+    <option value="5dias_mujer_nivel2">5 días · Mujer · Nivel 2</option>
+    <option value="5dias_mujer_nivel3">5 días · Mujer · Nivel 3</option>
+    <option value="5dias_mujer_nivel4">5 días · Mujer · Nivel 4</option>
+    <option value="5dias_mujer_nivel5">5 días · Mujer · Nivel 5</option>
+  </optgroup>
+</select>
 
       {errorMsg && <p className="error-msg">{errorMsg}</p>}
       {mensaje && <p className="msg-exito">{mensaje}</p>}

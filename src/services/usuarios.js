@@ -46,47 +46,31 @@ export async function completarDia(dni, diaActual, cantidadDias) {
  * Lanza un error si el DNI ya existe.
  */
 export async function crearAlumnoConPlantilla({ dni, nombre, rutinaId }) {
-  try {
-    const dniLimpio = String(dni).trim();
+  const dniLimpio = String(dni).trim();
+  
+  const plantillaRef = doc(db, "rutinas", rutinaId);
+  const plantillaSnap = await getDoc(plantillaRef);
 
-    // 1. Verificamos si el alumno ya existe para no sobrescribirlo
-    const userRef = doc(db, "usuarios", dniLimpio);
-    const userSnap = await getDoc(userRef);
-
-    if (userSnap.exists()) {
-      throw new Error("ELIMINAR_DUPLICADO");
-    }
-
-    // 2. Buscamos la plantilla en la colección 'rutinas'
-    const plantillaRef = doc(db, "rutinas", rutinaId);
-    const plantillaSnap = await getDoc(plantillaRef);
-
-    let ejerciciosPlantilla = {};
-    let cantidadDias = 3;
-
-    if (plantillaSnap.exists()) {
-      const data = plantillaSnap.data();
-      ejerciciosPlantilla = data.dias || {};
-      cantidadDias = data.cantidadDias || 3;
-    } else {
-      if (rutinaId === "fuerza_4dias") cantidadDias = 4;
-      if (rutinaId === "acondicionamiento_2dias") cantidadDias = 2;
-    }
-
-    // 3. Guardamos el nuevo usuario
-    await setDoc(userRef, {
-      nombre: nombre.toLowerCase().trim(),
-      cantidadDias: cantidadDias,
-      diaActual: 1,
-      rutinaId: rutinaId,
-      rutina: ejerciciosPlantilla
-    });
-
-    return true;
-  } catch (error) {
-    console.error("Error al crear alumno en Firestore:", error);
-    throw error;
+  let ejerciciosPlantilla = {};
+  if (plantillaSnap.exists()) {
+    ejerciciosPlantilla = plantillaSnap.data();
   }
+
+  const diasPlantilla = ejerciciosPlantilla.dias || {};
+  // La cantidad de días se calcula a partir de las claves reales de la plantilla
+  // (dia1, dia2, ...), no de un campo separado que podría no existir o desactualizarse.
+  const cantidadDias = Object.keys(diasPlantilla).length || 3;
+
+  const userRef = doc(db, "usuarios", dniLimpio);
+  await setDoc(userRef, {
+    nombre: nombre.toLowerCase().trim(),
+    cantidadDias,
+    diaActual: 1,
+    rutinaId: rutinaId,
+    rutina: diasPlantilla
+  });
+
+  return true;
 }
 /**
  * Sobreescribe la rutina personalizada de un alumno existente
